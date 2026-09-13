@@ -14,7 +14,7 @@ import type { Unit, Round, Profile } from "./core";
 const app = document.getElementById("app")!;
 
 const UNITS: Unit[] = ["ft", "yd", "mi", "in", "m", "cm", "km"];
-const ROUND_COUNT = 20;
+const ROUND_COUNT = 10;
 
 const QUICK_PICKS: Array<{ value: number; unit: Unit; label: string }> = [
   { value: 10, unit: "ft", label: "10 ft" },
@@ -33,6 +33,51 @@ const CATEGORY_LABEL: Record<string, string> = {
   everyday: "everyday objects (paper, phone, bed...)",
   landmark: "landmarks (city blocks)",
 };
+
+// Emoji fallback shown until real artwork lands in /public/images (see IMAGE_PROMPTS.md).
+// Each <img> below points at a filename that doesn't exist yet — that's fine, the error
+// handler swaps in the emoji span, so dropping in real files later needs zero code changes.
+const CATEGORY_EMOJI: Record<string, string> = {
+  standardized: "📐",
+  vehicle: "🚗",
+  embodied: "🧍",
+  everyday: "📦",
+  landmark: "🏙️",
+};
+
+function categoryIcon(category: string): string {
+  const emoji = CATEGORY_EMOJI[category] ?? "📏";
+  return `<span class="cat-icon"><img class="cat-icon-img" src="/images/icon-${category}.png" alt="" /><span class="cat-icon-emoji" hidden>${emoji}</span></span>`;
+}
+
+/** Call after any innerHTML write that included categoryIcon() output. */
+function wireIconFallbacks(root: HTMLElement) {
+  root.querySelectorAll<HTMLImageElement>(".cat-icon-img").forEach((img) => {
+    img.addEventListener("error", () => {
+      img.hidden = true;
+      const emoji = img.nextElementSibling as HTMLElement | null;
+      if (emoji) emoji.hidden = false;
+    });
+  });
+}
+
+function launchConfetti(container: HTMLElement) {
+  const colors = ["#1f6f54", "#4cc9a0", "#f4b942", "#e0663e", "#6b6b66"];
+  const burst = document.createElement("div");
+  burst.className = "confetti-burst";
+  for (let i = 0; i < 28; i++) {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.setProperty("--x", `${Math.random() * 100}%`);
+    piece.style.setProperty("--delay", `${Math.random() * 0.3}s`);
+    piece.style.setProperty("--duration", `${1.2 + Math.random() * 0.8}s`);
+    piece.style.setProperty("--rotate", `${Math.random() * 360}deg`);
+    piece.style.background = colors[i % colors.length];
+    burst.appendChild(piece);
+  }
+  container.appendChild(burst);
+  setTimeout(() => burst.remove(), 2200);
+}
 
 type Mode = "translate" | "play-name" | "play-round" | "play-summary";
 
@@ -66,7 +111,10 @@ function renderNav(): string {
 
 function render() {
   app.innerHTML = `
-    <h1>NGenWay Measure</h1>
+    <div class="header-row">
+      <img class="mascot mascot-header" src="/images/mascot.png" alt="" onerror="this.remove()" />
+      <h1>NGenWay Measure</h1>
+    </div>
     ${renderNav()}
     <div id="screen"></div>
   `;
@@ -140,10 +188,11 @@ function renderTranslate(screen: HTMLElement, initial = readFromUrl()) {
         <span class="metric">(≈ ${other.value.toFixed(1)} ${other.unit})</span>
       </p>
       <ul class="comparisons">
-        ${result.comparisons.map((c) => `<li>${formatComparison(c)}</li>`).join("")}
+        ${result.comparisons.map((c) => `<li>${categoryIcon(c.reference.category)}${formatComparison(c)}</li>`).join("")}
       </ul>
       <a class="share-link" href="${shareUrl}">${shareUrl}</a>
     `;
+    wireIconFallbacks(resultEl);
 
     const url = new URL(window.location.href);
     url.searchParams.set("d", String(value));
@@ -235,18 +284,27 @@ function renderPlayRound(screen: HTMLElement) {
   const round = state.session[state.roundIndex];
   const profile = state.profile!;
 
+  const dots = state.session
+    .map((_, i) => `<span class="progress-dot ${i < state.roundIndex ? "done" : ""} ${i === state.roundIndex ? "current" : ""}"></span>`)
+    .join("");
+
   screen.innerHTML = `
-    <p class="round-progress">Round ${state.roundIndex + 1} of ${state.session.length} — ${profile.name}</p>
-    <p class="result-heading round-heading">${round.value} ${round.unit}</p>
-    <p class="tagline">Which comparison helps you picture this best?</p>
-    <div class="round-options">
-      ${round.options
-        .map(
-          (opt, i) => `<button type="button" class="option-btn" data-index="${i}">${formatComparison(opt)}</button>`
-        )
-        .join("")}
+    <div class="round-card">
+      <p class="round-progress">${profile.name}'s turn</p>
+      <div class="progress-dots">${dots}</div>
+      <p class="result-heading round-heading">${round.value} ${round.unit}</p>
+      <p class="tagline">Which comparison helps you picture this best?</p>
+      <div class="round-options">
+        ${round.options
+          .map(
+            (opt, i) =>
+              `<button type="button" class="option-btn" data-index="${i}">${categoryIcon(opt.reference.category)}${formatComparison(opt)}</button>`
+          )
+          .join("")}
+      </div>
     </div>
   `;
+  wireIconFallbacks(screen);
 
   const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".option-btn"));
   buttons.forEach((btn) => {
@@ -276,25 +334,30 @@ function renderPlaySummary(screen: HTMLElement) {
   const breakdown = categoryBreakdown(profile);
 
   screen.innerHTML = `
-    <p class="tagline">Nice work, ${profile.name} — ${profile.roundsPlayed} rounds played total.</p>
-    <p class="result-heading round-heading">What you gravitate toward</p>
-    <ul class="breakdown">
-      ${breakdown
-        .map(
-          (b) => `
-        <li>
-          <div class="breakdown-label">${CATEGORY_LABEL[b.category] ?? b.category}</div>
-          <div class="breakdown-bar"><div class="breakdown-fill" style="width:${Math.round(b.pickRate * 100)}%"></div></div>
-          <div class="breakdown-pct">${Math.round(b.pickRate * 100)}%</div>
-        </li>`
-        )
-        .join("")}
-    </ul>
-    <div class="summary-actions">
-      <button type="button" id="play-more">Play ${ROUND_COUNT} more</button>
-      <button type="button" id="done-playing">Done — try the translator</button>
+    <div class="summary-card">
+      <img class="mascot mascot-celebrate" src="/images/mascot-celebrate.png" alt="" onerror="this.remove()" />
+      <p class="tagline">Nice work, ${profile.name} — ${profile.roundsPlayed} rounds played total.</p>
+      <p class="result-heading round-heading">What you gravitate toward</p>
+      <ul class="breakdown">
+        ${breakdown
+          .map(
+            (b) => `
+          <li>
+            <div class="breakdown-label">${categoryIcon(b.category)}${CATEGORY_LABEL[b.category] ?? b.category}</div>
+            <div class="breakdown-bar"><div class="breakdown-fill" style="width:${Math.round(b.pickRate * 100)}%"></div></div>
+            <div class="breakdown-pct">${Math.round(b.pickRate * 100)}%</div>
+          </li>`
+          )
+          .join("")}
+      </ul>
+      <div class="summary-actions">
+        <button type="button" id="play-more">Play ${ROUND_COUNT} more</button>
+        <button type="button" id="done-playing">Done — try the translator</button>
+      </div>
     </div>
   `;
+  wireIconFallbacks(screen);
+  launchConfetti(screen);
 
   document.getElementById("play-more")!.addEventListener("click", () => {
     state.session = buildSession(ROUND_COUNT);

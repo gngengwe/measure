@@ -29,10 +29,10 @@ judgment and action.
 
 ## v0.1.1 addition: Play mode (preference-discovery game)
 Added after initial v0.1 review felt too form-like. A second mode alongside Translate:
-enter a name (local profile, not an account), answer 20 rounds of "which comparison
+enter a name (local profile, not an account), answer 10 rounds of "which comparison
 makes sense to you" (neutral ranking, not yet personalized — the game must not be
 shaped by the preference it's trying to discover), see a category breakdown, then
-"play 20 more" or move to Translate, which is now weighted by what was learned.
+"play 10 more" or move to Translate, which is now weighted by what was learned.
 This pulls the "which helped most" feedback loop and local personalization forward
 from their originally-deferred v0.2 slot — see MVP_SPEC.md for the mechanics
 (profile storage, weighting formula, round generation). Still no backend, no

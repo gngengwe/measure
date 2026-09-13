@@ -59,7 +59,7 @@ function shuffle<T>(items: T[]): T[] {
  * to discover preference, so it must not already be shaped by it. Skips any distance
  * that doesn't produce at least 2 real options (no meaningful choice to make).
  */
-export function buildSession(roundCount = 20): Round[] {
+export function buildSession(roundCount = 10): Round[] {
   const rounds: Round[] = [];
   for (const d of shuffle(DISTANCE_POOL)) {
     if (rounds.length >= roundCount) break;

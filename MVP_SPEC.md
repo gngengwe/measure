@@ -118,7 +118,7 @@ name in `localStorage` under `ngenway-measure:profiles`. No accounts, no sync â€
 local-device profile a person names themselves; multiple people can each have one on a
 shared device (see `src/core/profile.ts`).
 
-**Session:** 20 rounds, each a random distance drawn from a curated pool spanning the
+**Session:** 10 rounds (dropped from an initial 20 after review felt like too long a commitment), each a random distance drawn from a curated pool spanning the
 dataset's usable scale range (`src/core/game.ts`'s `DISTANCE_POOL` â€” not a raw continuous
 random value, which would too often land in the thin-coverage gap noted in
 `REFERENCE_DATA.md` and produce a round with <2 options). Each round's options are ranked

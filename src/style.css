@@ -35,9 +35,23 @@ body {
   padding: 32px 20px 60px;
 }
 
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.mascot-header {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
 h1 {
   font-size: 1.4rem;
-  margin: 0 0 4px;
+  margin: 0;
 }
 
 p.tagline {
@@ -151,7 +165,8 @@ button {
   cursor: pointer;
 }
 
-button:active { opacity: 0.85; }
+button:active { transform: scale(0.97); opacity: 0.85; }
+button { transition: transform 0.1s ease, opacity 0.1s ease; }
 
 .mode-nav {
   display: flex;
@@ -227,6 +242,8 @@ button:active { opacity: 0.85; }
 }
 
 .breakdown-label {
+  display: flex;
+  align-items: center;
   font-size: 0.9rem;
   margin-bottom: 6px;
 }
@@ -259,4 +276,115 @@ button:active { opacity: 0.85; }
   background: transparent;
   color: var(--muted);
   border: 1px solid var(--border);
+}
+
+/* ---------- category icons (emoji fallback until real artwork lands) ---------- */
+
+.cat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.cat-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cat-icon-emoji {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ---------- round-card entrance animation ---------- */
+
+@keyframes round-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.round-card {
+  animation: round-enter 0.28s ease-out;
+}
+
+/* ---------- progress dots ---------- */
+
+.progress-dots {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.progress-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.progress-dot.done {
+  background: var(--accent);
+}
+
+.progress-dot.current {
+  background: var(--accent);
+  transform: scale(1.3);
+}
+
+/* ---------- summary + mascot + confetti ---------- */
+
+.summary-card {
+  position: relative;
+  text-align: center;
+  animation: round-enter 0.3s ease-out;
+}
+
+.summary-card .tagline,
+.summary-card .breakdown,
+.summary-card .result-heading {
+  text-align: left;
+}
+
+.mascot-celebrate {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  margin: 0 auto 12px;
+  display: block;
+}
+
+.confetti-burst {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 5;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -10px;
+  left: var(--x);
+  width: 7px;
+  height: 10px;
+  opacity: 0.9;
+  animation: confetti-fall var(--duration) ease-in var(--delay) forwards;
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(220px) rotate(var(--rotate)); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .round-card, .summary-card, .confetti-piece, button {
+    animation: none !important;
+    transition: none !important;
+  }
 }
