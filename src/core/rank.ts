@@ -19,7 +19,13 @@ function ratioSimplicity(ratio: number, countable: boolean | undefined): number 
   return Math.max(0, 1 - Math.min(1, Math.abs(ratio - nearest) / nearest));
 }
 
-function scoreReference(meters: number, ref: ReferenceObject): Comparison | null {
+export type PreferenceWeights = Partial<Record<Category, number>>;
+
+function scoreReference(
+  meters: number,
+  ref: ReferenceObject,
+  preferenceWeights: PreferenceWeights | undefined
+): Comparison | null {
   const ratio = meters / ref.canonicalLength;
 
   // Hard absurdity floor/ceiling regardless of per-reference range.
@@ -31,7 +37,8 @@ function scoreReference(meters: number, ref: ReferenceObject): Comparison | null
 
   const reliability = RELIABILITY_BY_VARIABILITY[ref.variability];
   const simplicity = ratioSimplicity(ratio, ref.countable);
-  const score = simplicity * reliability * ref.familiarity;
+  const userPreference = preferenceWeights?.[ref.category] ?? 1.0;
+  const score = simplicity * reliability * ref.familiarity * userPreference;
 
   return { reference: ref, ratio, score };
 }
@@ -39,14 +46,17 @@ function scoreReference(meters: number, ref: ReferenceObject): Comparison | null
 /**
  * Rank all references for a target distance (meters) and pick up to `count`
  * comparisons from distinct categories, highest score first per category.
+ * `preferenceWeights` (from a local profile built in Play mode) nudges the
+ * score per category; omit it for neutral (1.0) ranking.
  */
 export function rankComparisons(
   meters: number,
   references: ReferenceObject[],
-  count = 3
+  count = 3,
+  preferenceWeights?: PreferenceWeights
 ): Comparison[] {
   const candidates = references
-    .map((ref) => scoreReference(meters, ref))
+    .map((ref) => scoreReference(meters, ref, preferenceWeights))
     .filter((c): c is Comparison => c !== null)
     .sort((a, b) => b.score - a.score);
 

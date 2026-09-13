@@ -140,3 +140,123 @@ select {
   color: var(--muted);
   font-size: 0.95rem;
 }
+
+button {
+  padding: 12px 18px;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+button:active { opacity: 0.85; }
+
+.mode-nav {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.mode-tab {
+  background: transparent;
+  color: var(--muted);
+  border-radius: 0;
+  padding: 8px 4px 10px;
+  margin-right: 20px;
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+}
+
+.mode-tab.active {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+
+.personalized-note {
+  color: var(--accent);
+  font-size: 0.85rem;
+  margin: -20px 0 16px;
+}
+
+.round-progress {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0 0 6px;
+}
+
+.round-heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.round-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-btn {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  text-align: left;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 1.05rem;
+}
+
+.option-btn:disabled { opacity: 0.55; }
+
+.option-btn.picked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  opacity: 1;
+}
+
+.breakdown {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.breakdown-label {
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.breakdown-bar {
+  background: var(--border);
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.breakdown-fill {
+  background: var(--accent);
+  height: 100%;
+}
+
+.breakdown-pct {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 3px;
+}
+
+.summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-actions button:last-child {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}

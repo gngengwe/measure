@@ -27,14 +27,26 @@ and app shell, so it can be lifted into a widget/SDK later without a rewrite.
 Don't merely convert the measurement. Make the quantity perceptible enough to support
 judgment and action.
 
+## v0.1.1 addition: Play mode (preference-discovery game)
+Added after initial v0.1 review felt too form-like. A second mode alongside Translate:
+enter a name (local profile, not an account), answer 20 rounds of "which comparison
+makes sense to you" (neutral ranking, not yet personalized — the game must not be
+shaped by the preference it's trying to discover), see a category breakdown, then
+"play 20 more" or move to Translate, which is now weighted by what was learned.
+This pulls the "which helped most" feedback loop and local personalization forward
+from their originally-deferred v0.2 slot — see MVP_SPEC.md for the mechanics
+(profile storage, weighting formula, round generation). Still no backend, no
+accounts, no cross-device sync: everything lives in that browser's localStorage.
+
 ## v0.1 non-goals
 - Native app
 - AR measurement / camera
 - Live navigation integration
 - Driving interaction
-- Accounts / cloud personalization / backend
-- "Which helped most" feedback capture (deferred to v0.2)
-- Learning/quiz mode (deferred to v0.3)
+- Accounts / cloud personalization / backend (local-only personalization is now in
+  scope via Play mode, above — this excludes only server-side/cross-device accounts)
+- Guess-the-actual-distance quiz mode (mockup 3's "how far is it, pick a number"
+  mechanic — different from Play mode's "which comparison helps," still deferred)
 - Any measurement category other than distance
 - Novelty analogy generation (e.g. "38 baguettes")
 

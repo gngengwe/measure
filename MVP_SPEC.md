@@ -111,5 +111,35 @@ at high multipliers). References flagged `countable: true`:
 - Never state a reference as exact; `variability: high` references get a qualifier in copy,
   e.g. "≈ about 7 car lengths (car sizes vary)".
 
+## Play mode (v0.1.1 addition)
+
+**Profile:** `{ name, roundsPlayed, stats: Record<Category, {shown, picked}> }`, keyed by
+name in `localStorage` under `ngenway-measure:profiles`. No accounts, no sync — this is a
+local-device profile a person names themselves; multiple people can each have one on a
+shared device (see `src/core/profile.ts`).
+
+**Session:** 20 rounds, each a random distance drawn from a curated pool spanning the
+dataset's usable scale range (`src/core/game.ts`'s `DISTANCE_POOL` — not a raw continuous
+random value, which would too often land in the thin-coverage gap noted in
+`REFERENCE_DATA.md` and produce a round with <2 options). Each round's options are ranked
+with **neutral** weighting (no `preferenceWeights` passed in) — the game exists to discover
+preference, so showing already-personalized options would contaminate the discovery.
+
+**Recording:** on each pick, every category *shown* that round gets `shown += 1`, and the
+picked category gets `picked += 1`. This is what lets `preferenceWeights()` compute a real
+pick-rate per category, not just a count of picks.
+
+**Weighting formula** (`src/core/profile.ts` `preferenceWeights`): a category stays neutral
+(no entry, i.e. multiplier 1.0) until it's been shown at least 3 times (`MIN_SAMPLE`);
+once it has, `weight = 0.7 + 0.6 * pickRate`. This keeps the personalization nudge in a
+0.7-1.3 band — noticeable, but never able to override `scaleFit`/`ratioSimplicity`
+disqualification on its own. The formula is a first-pass editorial choice, not derived from
+data — same caveat as the dataset's familiarity values.
+
+**Translate integration:** once a profile exists (played at least one round), Translate
+mode passes that profile's `preferenceWeights()` into `translate()` and shows a
+"Personalized for {name}" note whenever at least one category has enough samples to be
+weighted.
+
 ## Explicit non-goals for v0.1
 See `PRODUCT.md`.
