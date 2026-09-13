@@ -1,13 +1,11 @@
-# Gemini image prompts for NGenWay Measure
+# Image briefs for NGenWay Measure
 
-Generate each of these in the Gemini app (gemini.google.com or the mobile app), download
-the result, and send me the files — I'll drop them into `public/images/` under the exact
-filename listed. The code already points at these paths with a graceful fallback (emoji
-icons, no mascot), so nothing breaks in the meantime and nothing else needs to change once
-you hand them over — just tell me the filenames if you don't rename them to match.
+All seven assets are now generated and saved in `public/images/` under the filenames
+below. The app uses them directly, with emoji fallbacks if a category image fails to load.
+See [IMAGE_GENERATION.md](IMAGE_GENERATION.md) for the exact prompts used with the built-in
+image generation tool. The original briefs below remain the design reference.
 
-**Shared style prefix** — paste this before each individual prompt so the set looks
-cohesive (Gemini doesn't remember style across separate chats/generations):
+**Shared style prefix** — use this before each individual prompt so the set looks cohesive:
 
 > Flat vector illustration, minimalist, thick clean rounded outlines, no gradients, no
 > drop shadows, no text or lettering anywhere in the image. Color palette limited to forest
@@ -47,10 +45,7 @@ simple single-subject icons, not scenes — they need to read instantly at tiny 
   simple building silhouettes, icon style.
 
 ## Format notes
-- Square images, any resolution Gemini gives you (512px+ is plenty — the code displays
-  these small, so it downscales fine; don't worry about matching exact pixel sizes).
-- PNG preferred. If Gemini can't produce a transparent background, a plain white or
-  off-white (#fafaf9) background is fine too — it'll blend with the app's light background;
-  it just won't blend as cleanly in dark mode, which is an acceptable tradeoff for now.
-- Send whichever ones you get — this doesn't have to happen all at once, and the emoji
-  fallback covers anything not yet generated.
+- Square images, 512px+ is plenty — the code displays
+  these small, so it downscales fine; don't worry about matching exact pixel sizes.
+- The installed assets are PNGs with actual alpha transparency so they blend with both
+  light and dark backgrounds. Preserve that transparency when replacing them.

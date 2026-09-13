@@ -278,7 +278,7 @@ button { transition: transform 0.1s ease, opacity 0.1s ease; }
   border: 1px solid var(--border);
 }
 
-/* ---------- category icons (emoji fallback until real artwork lands) ---------- */
+/* ---------- category icons with emoji fallback ---------- */
 
 .cat-icon {
   display: inline-flex;

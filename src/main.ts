@@ -34,9 +34,8 @@ const CATEGORY_LABEL: Record<string, string> = {
   landmark: "landmarks (city blocks)",
 };
 
-// Emoji fallback shown until real artwork lands in /public/images (see IMAGE_PROMPTS.md).
-// Each <img> below points at a filename that doesn't exist yet — that's fine, the error
-// handler swaps in the emoji span, so dropping in real files later needs zero code changes.
+// Generated artwork lives in /public/images (see IMAGE_PROMPTS.md).
+// Keep emoji fallbacks available if an image fails to load.
 const CATEGORY_EMOJI: Record<string, string> = {
   standardized: "📐",
   vehicle: "🚗",
