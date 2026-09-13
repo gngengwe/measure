@@ -1,0 +1,129 @@
+:root {
+  color-scheme: light dark;
+  --bg: #fafaf9;
+  --fg: #1c1c1a;
+  --muted: #6b6b66;
+  --accent: #1f6f54;
+  --card: #ffffff;
+  --border: #e4e2dd;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #17181a;
+    --fg: #f1f1ee;
+    --muted: #a0a09a;
+    --accent: #4cc9a0;
+    --card: #202225;
+    --border: #33352f;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  min-height: 100vh;
+}
+
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0 0 4px;
+}
+
+p.tagline {
+  color: var(--muted);
+  margin: 0 0 28px;
+  font-size: 0.95rem;
+}
+
+form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+input[type="number"] {
+  flex: 2;
+  min-width: 0;
+  padding: 12px 14px;
+  font-size: 1.05rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+select {
+  flex: 1;
+  padding: 12px 8px;
+  font-size: 1.05rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--fg);
+}
+
+button {
+  padding: 12px 18px;
+  font-size: 1.05rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+button:active { opacity: 0.85; }
+
+.result-heading {
+  font-size: 1.1rem;
+  margin: 0 0 16px;
+}
+
+.result-heading .metric {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.9rem;
+}
+
+.comparisons {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comparisons li {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 1.05rem;
+}
+
+.share-link {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  word-break: break-all;
+  text-decoration: none;
+}
+
+.share-link:hover { color: var(--accent); }
+
+.empty-state {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
