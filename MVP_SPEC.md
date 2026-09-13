@@ -9,7 +9,11 @@ Static TypeScript web app / PWA. No backend. Deployable as a static site.
 
 ## Input
 - Number + unit picker: `ft`, `yd`, `mi`, `in`, `m`, `cm`, `km`
-- Single field, single submit (button or Enter) — no autocomplete/voice in v0.1
+- Live: results update as the number is typed (debounced ~150ms) or the unit is changed —
+  no submit button. Revised after initial v0.1 felt too form-like/manual in first review.
+- Quick-pick chips for common distances (10ft/20ft/50ft/100ft/100yd/500ft/1mi) let a user
+  explore with zero typing; tapping one fills the inputs and shows the result immediately.
+- No autocomplete/voice in v0.1.
 
 ## Output
 - Always echo the parsed input in both the entered unit and its metric/imperial counterpart

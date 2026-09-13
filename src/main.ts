@@ -5,6 +5,16 @@ const app = document.getElementById("app")!;
 
 const UNITS: Unit[] = ["ft", "yd", "mi", "in", "m", "cm", "km"];
 
+const QUICK_PICKS: Array<{ value: number; unit: Unit; label: string }> = [
+  { value: 10, unit: "ft", label: "10 ft" },
+  { value: 20, unit: "ft", label: "20 ft" },
+  { value: 50, unit: "ft", label: "50 ft" },
+  { value: 100, unit: "ft", label: "100 ft" },
+  { value: 100, unit: "yd", label: "100 yd" },
+  { value: 500, unit: "ft", label: "500 ft" },
+  { value: 1, unit: "mi", label: "1 mi" },
+];
+
 function readFromUrl(): { value: number; unit: Unit } | null {
   const params = new URLSearchParams(window.location.search);
   const d = params.get("d");
@@ -19,19 +29,32 @@ function render(initial: { value: number; unit: Unit } | null) {
   app.innerHTML = `
     <h1>NGenWay Measure</h1>
     <p class="tagline">What distance are you trying to understand?</p>
-    <form id="measure-form">
+    <div class="input-row">
       <input type="number" id="value" min="0" step="any" placeholder="100"
-        value="${initial ? initial.value : ""}" required />
+        value="${initial ? initial.value : ""}" />
       <select id="unit">
-        ${UNITS.map((u) => `<option value="${u}" ${initial?.unit === u ? "selected" : ""}>${u}</option>`).join("")}
+        ${UNITS.map((u) => `<option value="${u}" ${(initial?.unit ?? "ft") === u ? "selected" : ""}>${u}</option>`).join("")}
       </select>
-      <button type="submit">Go</button>
-    </form>
+    </div>
+    <div class="chips">
+      ${QUICK_PICKS.map((p) => `<button type="button" class="chip" data-value="${p.value}" data-unit="${p.unit}">${p.label}</button>`).join("")}
+    </div>
     <div id="result"></div>
   `;
 
-  const form = document.getElementById("measure-form") as HTMLFormElement;
+  const valueInput = document.getElementById("value") as HTMLInputElement;
+  const unitSelect = document.getElementById("unit") as HTMLSelectElement;
   const resultEl = document.getElementById("result")!;
+  const chips = Array.from(document.querySelectorAll<HTMLButtonElement>(".chip"));
+
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function setActiveChip(value: number, unit: Unit) {
+    for (const chip of chips) {
+      const isMatch = Number(chip.dataset.value) === value && chip.dataset.unit === unit;
+      chip.classList.toggle("active", isMatch);
+    }
+  }
 
   function showResult(value: number, unit: Unit) {
     const result = translate(value, unit);
@@ -53,24 +76,45 @@ function render(initial: { value: number; unit: Unit } | null) {
       </ul>
       <a class="share-link" href="${shareUrl}">${shareUrl}</a>
     `;
-  }
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const value = Number((document.getElementById("value") as HTMLInputElement).value);
-    const unit = (document.getElementById("unit") as HTMLSelectElement).value as Unit;
-    if (!Number.isFinite(value) || value <= 0) return;
 
     const url = new URL(window.location.href);
     url.searchParams.set("d", String(value));
     url.searchParams.set("u", unit);
     window.history.replaceState({}, "", url);
+  }
 
+  function tryShowFromInputs() {
+    const value = Number(valueInput.value);
+    const unit = unitSelect.value as Unit;
+    setActiveChip(value, unit);
+    if (!valueInput.value || !Number.isFinite(value) || value <= 0) {
+      resultEl.innerHTML = "";
+      return;
+    }
     showResult(value, unit);
+  }
+
+  valueInput.addEventListener("input", () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(tryShowFromInputs, 150);
   });
+
+  unitSelect.addEventListener("change", tryShowFromInputs);
+
+  for (const chip of chips) {
+    chip.addEventListener("click", () => {
+      const value = Number(chip.dataset.value);
+      const unit = chip.dataset.unit as Unit;
+      valueInput.value = String(value);
+      unitSelect.value = unit;
+      setActiveChip(value, unit);
+      showResult(value, unit);
+    });
+  }
 
   if (initial) {
     showResult(initial.value, initial.unit);
+    setActiveChip(initial.value, initial.unit);
   }
 }
 
