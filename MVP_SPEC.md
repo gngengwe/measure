@@ -204,8 +204,33 @@ Also nudged light-mode `--incorrect-fg` from a 4.54:1 pass (too tight a margin g
 rendering variance across displays) to 5.30:1.
 
 Re-ran the full 8-screen-state axe sweep in both color schemes after the fix: zero
-violations, including zero `color-contrast` violations specifically. A complete
-keyboard-only/screen-reader walkthrough (not just automated tooling) is still open.
+violations, including zero `color-contrast` violations specifically.
+
+## Keyboard-only walkthrough + focus management (v0.1.8 addition)
+
+Closed out the last "still open" item — manually walked the tab order through every
+screen (not axe-core, which doesn't test this) and found a real, systemic bug: **every
+`render()` call drops focus to `<body>`**, because it fully replaces `#screen`'s
+`innerHTML`, destroying whatever element was focused. Confirmed across all three
+transition types — mode-tab switches, Play/Learn round advances, and reaching a summary
+screen — all landed on `<body>`. A keyboard user had to re-Tab from the very top of the
+page after every single round, and a screen-reader user got no announcement that
+anything had changed.
+
+Fixed centrally rather than per-screen: each `render*Fn`'s primary heading/question gets
+a `data-focus-anchor` attribute (`.tagline` on name/summary screens, `.round-heading` on
+Play/Learn rounds, the Translate tagline). The shared `render()` dispatcher calls
+`focusScreenAnchor()` after every render *except the very first page load* (a
+`hasRenderedOnce` flag) — first paint leaves default browser/AT focus behavior alone;
+every subsequent transition moves focus to the new screen's anchor (adding
+`tabindex="-1"` if needed, so it's programmatically focusable without joining the
+sequential Tab order).
+
+Verified: focus now lands on the anchor (not body) after all three transition types;
+Tab from the anchor proceeds naturally into that screen's interactive content (e.g. from
+the round heading straight into the answer options); initial page load is unaffected
+(focus stays at `<body>`, untouched, as before). Full 8-screen axe sweep + both-theme
+contrast check re-run after the fix: zero regressions.
 
 ## Installable PWA (v0.1.5 addition)
 

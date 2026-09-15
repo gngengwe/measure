@@ -138,6 +138,22 @@ function renderNav(): string {
   `;
 }
 
+// Every render() fully replaces #screen's innerHTML, which destroys whatever element
+// was focused and drops focus to <body> -- a real bug found via a keyboard walkthrough,
+// not a hypothetical: it happened on every mode switch, round transition, and summary
+// screen. Each render*Fn marks its screen's main heading/question with
+// data-focus-anchor; after any render *except the very first paint* (so default
+// browser/AT behavior on initial load is left alone), focus moves there so keyboard
+// and screen-reader users land somewhere meaningful instead of the top of the page.
+let hasRenderedOnce = false;
+
+function focusScreenAnchor() {
+  const anchor = document.querySelector<HTMLElement>("#screen [data-focus-anchor]");
+  if (!anchor) return;
+  if (!anchor.hasAttribute("tabindex")) anchor.setAttribute("tabindex", "-1");
+  anchor.focus();
+}
+
 function render() {
   app.innerHTML = `
     <div class="header-row">
@@ -167,6 +183,9 @@ function render() {
   else if (state.mode === "learn-name") renderLearnName(screen);
   else if (state.mode === "learn-round") renderLearnRound(screen);
   else if (state.mode === "learn-summary") renderLearnSummary(screen);
+
+  if (hasRenderedOnce) focusScreenAnchor();
+  hasRenderedOnce = true;
 }
 
 // ---------- Translate screen ----------
@@ -176,7 +195,7 @@ function renderTranslate(screen: HTMLElement, initial = readFromUrl()) {
   const isPersonalized = weights && Object.keys(weights).length > 0;
 
   screen.innerHTML = `
-    <p class="tagline" id="translate-tagline">What distance are you trying to understand?</p>
+    <p class="tagline" id="translate-tagline" data-focus-anchor>What distance are you trying to understand?</p>
     ${isPersonalized ? `<p class="personalized-note">Personalized for ${state.profile!.name}</p>` : ""}
     <div class="input-row">
       <label class="visually-hidden" for="value">Distance value</label>
@@ -294,7 +313,7 @@ function renderPlayName(screen: HTMLElement) {
   const existingNames = listProfileNames();
 
   screen.innerHTML = `
-    <p class="tagline">Who's playing? You'll see ${ROUND_COUNT} distances — pick whichever
+    <p class="tagline" data-focus-anchor>Who's playing? You'll see ${ROUND_COUNT} distances — pick whichever
     comparison makes the most sense to you each time.</p>
     <div class="input-row">
       <label class="visually-hidden" for="player-name">Your name</label>
@@ -346,7 +365,7 @@ function renderPlayRound(screen: HTMLElement) {
     <div class="round-card">
       <p class="round-progress">${profile.name}'s turn — round ${state.roundIndex + 1} of ${state.session.length}</p>
       <div class="progress-dots" aria-hidden="true">${dots}</div>
-      <p class="result-heading round-heading">${round.value} ${round.unit}</p>
+      <p class="result-heading round-heading" data-focus-anchor>${round.value} ${round.unit}</p>
       <p class="tagline">Which comparison helps you picture this best?</p>
       <div class="round-options" role="group" aria-label="Comparison choices">
         ${round.options
@@ -390,7 +409,7 @@ function renderPlaySummary(screen: HTMLElement) {
   screen.innerHTML = `
     <div class="summary-card">
       <img class="mascot mascot-celebrate" src="/images/mascot-celebrate.png" alt="" onerror="this.remove()" />
-      <p class="tagline">Nice work, ${profile.name} — ${profile.roundsPlayed} rounds played total.</p>
+      <p class="tagline" data-focus-anchor>Nice work, ${profile.name} — ${profile.roundsPlayed} rounds played total.</p>
       <p class="result-heading round-heading">What you gravitate toward</p>
       <ul class="breakdown">
         ${breakdown
@@ -435,7 +454,7 @@ function renderLearnName(screen: HTMLElement) {
   const knownProfiles = Object.fromEntries(existingNames.map((n) => [n, loadProfile(n)]));
 
   screen.innerHTML = `
-    <p class="tagline">Who's learning? You'll see a comparison and guess the real distance —
+    <p class="tagline" data-focus-anchor>Who's learning? You'll see a comparison and guess the real distance —
     ${LEARN_ROUND_COUNT} rounds, multiple choice.</p>
     <div class="input-row">
       <label class="visually-hidden" for="player-name">Your name</label>
@@ -497,7 +516,7 @@ function renderLearnRound(screen: HTMLElement) {
     <div class="round-card">
       <p class="round-progress">${profile.name}'s turn — round ${state.learnRoundIndex + 1} of ${state.learnSession.length}</p>
       <div class="progress-dots" aria-hidden="true">${dots}</div>
-      <p class="result-heading round-heading learn-clue">${round.clue}</p>
+      <p class="result-heading round-heading learn-clue" data-focus-anchor>${round.clue}</p>
       <p class="tagline" id="learn-question">About how far is that?</p>
       <div class="round-options learn-options" role="group" aria-labelledby="learn-question">
         ${round.options.map((ft, i) => `<button type="button" class="option-btn" data-value="${ft}" data-index="${i}">${ft} ft</button>`).join("")}
@@ -551,7 +570,7 @@ function renderLearnSummary(screen: HTMLElement) {
   screen.innerHTML = `
     <div class="summary-card">
       <img class="mascot mascot-celebrate" src="/images/mascot-celebrate.png" alt="" onerror="this.remove()" />
-      <p class="tagline">${profile.name}, you got ${state.learnCorrectCount} of ${sessionTotal} right this round (${sessionPct}%).</p>
+      <p class="tagline" data-focus-anchor>${profile.name}, you got ${state.learnCorrectCount} of ${sessionTotal} right this round (${sessionPct}%).</p>
       ${
         lifetime !== null
           ? `<p class="result-heading round-heading">Lifetime accuracy: ${Math.round(lifetime * 100)}%</p>
