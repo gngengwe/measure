@@ -70,6 +70,7 @@ function launchConfetti(container: HTMLElement) {
   const colors = ["#1f6f54", "#4cc9a0", "#f4b942", "#e0663e", "#6b6b66"];
   const burst = document.createElement("div");
   burst.className = "confetti-burst";
+  burst.setAttribute("aria-hidden", "true");
   for (let i = 0; i < 28; i++) {
     const piece = document.createElement("span");
     piece.className = "confetti-piece";
@@ -124,11 +125,15 @@ function readFromUrl(): { value: number; unit: Unit } | null {
 }
 
 function renderNav(): string {
+  const isActive = (prefix: string) => state.mode === prefix || state.mode.startsWith(prefix);
+  const tab = (mode: string, label: string) =>
+    `<button type="button" role="tab" aria-selected="${isActive(mode)}" class="mode-tab ${isActive(mode) ? "active" : ""}" data-mode="${mode}">${label}</button>`;
+
   return `
-    <nav class="mode-nav">
-      <button type="button" class="mode-tab ${state.mode === "translate" ? "active" : ""}" data-mode="translate">Translate</button>
-      <button type="button" class="mode-tab ${state.mode.startsWith("play") ? "active" : ""}" data-mode="play">Play</button>
-      <button type="button" class="mode-tab ${state.mode.startsWith("learn") ? "active" : ""}" data-mode="learn">Learn</button>
+    <nav class="mode-nav" role="tablist" aria-label="App sections">
+      ${tab("translate", "Translate")}
+      ${tab("play", "Play")}
+      ${tab("learn", "Learn")}
     </nav>
   `;
 }
@@ -171,19 +176,22 @@ function renderTranslate(screen: HTMLElement, initial = readFromUrl()) {
   const isPersonalized = weights && Object.keys(weights).length > 0;
 
   screen.innerHTML = `
-    <p class="tagline">What distance are you trying to understand?</p>
+    <p class="tagline" id="translate-tagline">What distance are you trying to understand?</p>
     ${isPersonalized ? `<p class="personalized-note">Personalized for ${state.profile!.name}</p>` : ""}
     <div class="input-row">
+      <label class="visually-hidden" for="value">Distance value</label>
       <input type="number" id="value" min="0" step="any" placeholder="100"
+        aria-describedby="translate-tagline"
         value="${initial ? initial.value : ""}" />
+      <label class="visually-hidden" for="unit">Unit</label>
       <select id="unit">
         ${UNITS.map((u) => `<option value="${u}" ${(initial?.unit ?? "ft") === u ? "selected" : ""}>${u}</option>`).join("")}
       </select>
     </div>
-    <div class="chips">
-      ${QUICK_PICKS.map((p) => `<button type="button" class="chip" data-value="${p.value}" data-unit="${p.unit}">${p.label}</button>`).join("")}
+    <div class="chips" role="group" aria-label="Quick distance picks">
+      ${QUICK_PICKS.map((p) => `<button type="button" class="chip" aria-pressed="false" data-value="${p.value}" data-unit="${p.unit}">${p.label}</button>`).join("")}
     </div>
-    <div id="result"></div>
+    <div id="result" aria-live="polite"></div>
   `;
 
   const valueInput = document.getElementById("value") as HTMLInputElement;
@@ -200,6 +208,7 @@ function renderTranslate(screen: HTMLElement, initial = readFromUrl()) {
     for (const chip of chips) {
       const isMatch = Number(chip.dataset.value) === value && chip.dataset.unit === unit;
       chip.classList.toggle("active", isMatch);
+      chip.setAttribute("aria-pressed", String(isMatch));
     }
   }
 
@@ -288,12 +297,13 @@ function renderPlayName(screen: HTMLElement) {
     <p class="tagline">Who's playing? You'll see ${ROUND_COUNT} distances — pick whichever
     comparison makes the most sense to you each time.</p>
     <div class="input-row">
+      <label class="visually-hidden" for="player-name">Your name</label>
       <input type="text" id="player-name" placeholder="Your name" maxlength="40" />
       <button type="button" id="start-game">Start</button>
     </div>
     ${
       existingNames.length > 0
-        ? `<div class="chips">
+        ? `<div class="chips" role="group" aria-label="Returning players">
             ${existingNames.map((n) => `<button type="button" class="chip name-chip" data-name="${n}">${n}</button>`).join("")}
           </div>`
         : ""
@@ -334,11 +344,11 @@ function renderPlayRound(screen: HTMLElement) {
 
   screen.innerHTML = `
     <div class="round-card">
-      <p class="round-progress">${profile.name}'s turn</p>
-      <div class="progress-dots">${dots}</div>
+      <p class="round-progress">${profile.name}'s turn — round ${state.roundIndex + 1} of ${state.session.length}</p>
+      <div class="progress-dots" aria-hidden="true">${dots}</div>
       <p class="result-heading round-heading">${round.value} ${round.unit}</p>
       <p class="tagline">Which comparison helps you picture this best?</p>
-      <div class="round-options">
+      <div class="round-options" role="group" aria-label="Comparison choices">
         ${round.options
           .map(
             (opt, i) =>
@@ -428,12 +438,13 @@ function renderLearnName(screen: HTMLElement) {
     <p class="tagline">Who's learning? You'll see a comparison and guess the real distance —
     ${LEARN_ROUND_COUNT} rounds, multiple choice.</p>
     <div class="input-row">
+      <label class="visually-hidden" for="player-name">Your name</label>
       <input type="text" id="player-name" placeholder="Your name" maxlength="40" />
       <button type="button" id="start-learn">Start</button>
     </div>
     ${
       existingNames.length > 0
-        ? `<div class="chips">
+        ? `<div class="chips" role="group" aria-label="Returning players">
             ${existingNames
               .map((n) => {
                 const acc = learnAccuracy(knownProfiles[n]);
@@ -484,14 +495,14 @@ function renderLearnRound(screen: HTMLElement) {
 
   screen.innerHTML = `
     <div class="round-card">
-      <p class="round-progress">${profile.name}'s turn</p>
-      <div class="progress-dots">${dots}</div>
+      <p class="round-progress">${profile.name}'s turn — round ${state.learnRoundIndex + 1} of ${state.learnSession.length}</p>
+      <div class="progress-dots" aria-hidden="true">${dots}</div>
       <p class="result-heading round-heading learn-clue">${round.clue}</p>
-      <p class="tagline">About how far is that?</p>
-      <div class="round-options learn-options">
+      <p class="tagline" id="learn-question">About how far is that?</p>
+      <div class="round-options learn-options" role="group" aria-labelledby="learn-question">
         ${round.options.map((ft, i) => `<button type="button" class="option-btn" data-value="${ft}" data-index="${i}">${ft} ft</button>`).join("")}
       </div>
-      <p class="learn-feedback" hidden></p>
+      <p class="learn-feedback" hidden aria-live="polite"></p>
     </div>
   `;
 

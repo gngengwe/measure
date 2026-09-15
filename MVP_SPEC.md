@@ -147,6 +147,38 @@ mode passes that profile's `preferenceWeights()` into `translate()` and shows a
 "Personalized for {name}" note whenever at least one category has enough samples to be
 weighted.
 
+## Accessibility pass (v0.1.6 addition)
+
+Flagged as a known gap in the earliest evaluation of this project (visual-first design,
+no consideration for screen readers/keyboard use) and never addressed until now. Fixed:
+
+- **Mode nav** now uses proper `role="tablist"`/`role="tab"`/`aria-selected` instead of
+  plain buttons with only a visual `.active` class.
+- **Form inputs** (distance value/unit, player name on both Play and Learn name screens)
+  got visually-hidden `<label>` elements — they previously relied on placeholder text and
+  surrounding paragraphs, neither of which is programmatically associated with the input.
+- **Dynamic content regions** (`#result` in Translate, `.learn-feedback` in Learn) got
+  `aria-live="polite"` so screen readers announce new comparisons/answers without the user
+  needing to re-navigate to them.
+- **Toggle-style buttons** (quick-pick chips) got `aria-pressed` kept in sync with the
+  visual active state.
+- **A real gap found in the process, not just planned**: Play mode's round-progress text
+  said only "`{name}'s turn`" — the round count was conveyed *exclusively* through the
+  colored progress dots, which are purely visual. Learn mode had the identical gap. Both
+  now say "round X of Y" in text; the dots themselves are marked `aria-hidden="true"`
+  since they're now redundant with that text, not a replacement for it.
+- Decorative images (mascot, category icons) already had empty `alt=""` correctly (the
+  icons are redundant with the comparison text next to them); confetti pieces got
+  `aria-hidden="true"` too.
+
+**Verified with real tooling, not just manual review**: ran `@axe-core/playwright`
+against all 8 screen states (Translate empty/with-result/conversions-expanded, Play
+name/round/summary, Learn round/summary) — zero violations across all of them. Also
+checked the visually-hidden labels don't affect layout (screenshot diff) and that tab
+order reaches all interactive elements. Full WCAG color-contrast audit and complete
+keyboard-only walkthrough are still open — axe-core catches structural/semantic issues,
+not a substitute for a real screen-reader pass.
+
 ## Installable PWA (v0.1.5 addition)
 
 `PRODUCT.md`/this file said "Platform: mobile-first web/PWA" since v0.1, but nothing
