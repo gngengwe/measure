@@ -10,13 +10,21 @@ import type { Unit } from "../src/core";
 
 const VALID_UNITS: Unit[] = ["in", "ft", "yd", "mi", "cm", "m", "km"];
 
-export const onRequestGet = async (context: any): Promise<any> => {
+// _middleware.ts (rather than index.ts) runs for every request under this directory,
+// including ones that would otherwise resolve straight to a static asset -- a plain
+// functions/index.ts handler got shadowed by static-asset serving in production for
+// "/" even though it worked in local `wrangler pages dev` emulation (a known Pages
+// static-vs-function precedence quirk). This is the documented pattern for "rewrite
+// HTML on every request." Guard to the root path so asset requests (JS/CSS/images)
+// pass straight through unmodified rather than running HTMLRewriter on binary bodies.
+export const onRequest = async (context: any): Promise<any> => {
   const url = new URL(context.request.url);
-  const d = url.searchParams.get("d");
-  const u = url.searchParams.get("u");
-
   const response = await context.next();
 
+  if (url.pathname !== "/" || context.request.method !== "GET") return response;
+
+  const d = url.searchParams.get("d");
+  const u = url.searchParams.get("u");
   if (!d || !u || !VALID_UNITS.includes(u as Unit)) return response;
 
   const value = Number(d);
