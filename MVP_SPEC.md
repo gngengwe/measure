@@ -22,6 +22,12 @@ Static TypeScript web app / PWA. No backend. Deployable as a static site.
 - Each comparison line: `≈ {multiplier} {reference name}` e.g. `≈ 6–7 car lengths`.
 - A shareable result URL: `measure.ngengwe.com/?d=100&u=ft` (query-param driven, so the
   result screen is fully derivable from the URL — this is what makes sharing free to add).
+- **On-demand full conversion table** (v0.1.2 addition, from tester feedback): a "Show exact
+  conversions" toggle beneath the comparisons reveals the value converted into all 7 units
+  (in, ft, yd, mi, cm, m, km), via `allConversions()`/`formatConversionValue()` in
+  `src/core/convert.ts` and `format.ts`. Collapsed by default — testers wanted the analogies
+  to stay the headline, with exact numbers available but not forced on them. The open/closed
+  state persists while browsing Translate (chips, typing) but resets on mode switch/reload.
 
 ## Data model
 

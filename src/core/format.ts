@@ -34,3 +34,15 @@ export function formatComparison(comparison: Comparison): string {
 
   return line;
 }
+
+/** Precision scales down as the number gets smaller, so e.g. miles (often <1) still reads cleanly. */
+export function formatConversionValue(value: number): string {
+  let decimals: number;
+  if (value >= 100) decimals = 0;
+  else if (value >= 10) decimals = 1;
+  else if (value >= 1) decimals = 2;
+  else decimals = 3;
+
+  const rounded = Number(value.toFixed(decimals));
+  return rounded.toLocaleString(undefined, { maximumFractionDigits: decimals });
+}

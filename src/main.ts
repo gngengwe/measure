@@ -8,6 +8,8 @@ import {
   preferenceWeights,
   categoryBreakdown,
   listProfileNames,
+  allConversions,
+  formatConversionValue,
 } from "./core";
 import type { Unit, Round, Profile } from "./core";
 
@@ -163,6 +165,9 @@ function renderTranslate(screen: HTMLElement, initial = readFromUrl()) {
   const chips = Array.from(document.querySelectorAll<HTMLButtonElement>(".chip"));
 
   let debounceTimer: ReturnType<typeof setTimeout> | undefined;
+  // Persists while browsing Translate (chips, typing) so testers who open it once don't
+  // have to re-open it for every value — resets on a fresh mode switch/reload.
+  let conversionsOpen = false;
 
   function setActiveChip(value: number, unit: Unit) {
     for (const chip of chips) {
@@ -181,6 +186,8 @@ function renderTranslate(screen: HTMLElement, initial = readFromUrl()) {
       return;
     }
 
+    const conversions = allConversions(value, unit);
+
     resultEl.innerHTML = `
       <p class="result-heading">
         ${value} ${unit}
@@ -189,9 +196,20 @@ function renderTranslate(screen: HTMLElement, initial = readFromUrl()) {
       <ul class="comparisons">
         ${result.comparisons.map((c) => `<li>${categoryIcon(c.reference.category)}${formatComparison(c)}</li>`).join("")}
       </ul>
+      <button type="button" class="conversions-toggle" aria-expanded="${conversionsOpen}">
+        ${conversionsOpen ? "Hide" : "Show"} exact conversions
+      </button>
+      <ul class="conversions-list" ${conversionsOpen ? "" : "hidden"}>
+        ${conversions.map((c) => `<li><span class="conv-unit">${c.unit}</span><span class="conv-value">${formatConversionValue(c.value)}</span></li>`).join("")}
+      </ul>
       <a class="share-link" href="${shareUrl}">${shareUrl}</a>
     `;
     wireIconFallbacks(resultEl);
+
+    resultEl.querySelector(".conversions-toggle")!.addEventListener("click", () => {
+      conversionsOpen = !conversionsOpen;
+      showResult(value, unit);
+    });
 
     const url = new URL(window.location.href);
     url.searchParams.set("d", String(value));

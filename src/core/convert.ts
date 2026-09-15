@@ -29,3 +29,17 @@ export function counterpartUnit(unit: Unit): Unit {
   }
   return "m";
 }
+
+/** Fixed display order for the on-demand full conversion table: imperial small->large, then metric small->large. */
+export const ALL_UNITS: Unit[] = ["in", "ft", "yd", "mi", "cm", "m", "km"];
+
+export interface UnitConversion {
+  unit: Unit;
+  value: number;
+}
+
+/** Convert a (value, unit) into every supported unit, in ALL_UNITS order. */
+export function allConversions(value: number, unit: Unit): UnitConversion[] {
+  const meters = toMeters(value, unit);
+  return ALL_UNITS.map((u) => ({ unit: u, value: fromMeters(meters, u) }));
+}

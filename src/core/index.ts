@@ -1,8 +1,9 @@
 import { REFERENCES } from "./data";
-import { toMeters, fromMeters, counterpartUnit } from "./convert";
+import { toMeters, fromMeters, counterpartUnit, allConversions } from "./convert";
+import type { UnitConversion } from "./convert";
 import { rankComparisons } from "./rank";
 import type { PreferenceWeights } from "./rank";
-import { formatComparison } from "./format";
+import { formatComparison, formatConversionValue } from "./format";
 import type { TranslationResult, Unit } from "./types";
 
 export type { ReferenceObject, Comparison, TranslationResult, Unit, Category } from "./types";
@@ -37,4 +38,6 @@ export function counterpart(value: number, unit: Unit): { value: number; unit: U
   return { value: fromMeters(meters, cUnit), unit: cUnit };
 }
 
-export { formatComparison };
+export { formatComparison, formatConversionValue };
+export { allConversions };
+export type { UnitConversion };
