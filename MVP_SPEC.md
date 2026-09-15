@@ -147,6 +147,20 @@ mode passes that profile's `preferenceWeights()` into `translate()` and shows a
 "Personalized for {name}" note whenever at least one category has enough samples to be
 weighted.
 
+## Shareable link previews (v0.1.4 addition)
+
+The share URL (`?d=100&u=ft`) is meaningless as a link-preview card without server-side
+help — a static SPA can't vary its `<title>`/OG tags per query string on its own. Added a
+Cloudflare Pages Function (`functions/index.ts`) that intercepts `GET /`, calls
+`context.next()` to get the static `index.html`, and uses `HTMLRewriter` to rewrite the
+title/description/OG/Twitter meta tags with that distance's actual comparisons (reusing
+`translate()`/`formatComparison()` from `src/core` directly — no separate copy of the
+logic). Falls back to the generic default tags (also added to `index.html`) for missing,
+invalid, or out-of-range `d`/`u` params. Verified locally with `wrangler pages dev` before
+shipping (this can't be exercised by `npm run dev`/Vitest, which don't run Pages
+Functions) — see the four cases checked: valid params, no params, invalid unit, and a
+value with zero qualifying comparisons.
+
 ## Learn mode (v0.1.3 addition)
 
 **Round generation** (`src/core/learn.ts`): a target distance in feet is drawn from a
