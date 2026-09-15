@@ -175,9 +175,37 @@ no consideration for screen readers/keyboard use) and never addressed until now.
 against all 8 screen states (Translate empty/with-result/conversions-expanded, Play
 name/round/summary, Learn round/summary) — zero violations across all of them. Also
 checked the visually-hidden labels don't affect layout (screenshot diff) and that tab
-order reaches all interactive elements. Full WCAG color-contrast audit and complete
-keyboard-only walkthrough are still open — axe-core catches structural/semantic issues,
-not a substitute for a real screen-reader pass.
+order reaches all interactive elements.
+
+## Color-contrast audit (v0.1.7 addition)
+
+Closed out the "still open" item from the accessibility pass above — computed WCAG
+relative-luminance contrast ratios for every color pair actually used in the CSS (not
+just spot-checked ones) and found two real failures, both invisible to a quick visual
+scan since neither looked obviously "low contrast" on screen:
+
+- **`--border` (used for input/select/chip/button/card boundaries) was 1.24:1 against the
+  page background** — WCAG 1.4.11 requires 3:1 for UI-component boundaries, and here the
+  border genuinely is the *only* way to perceive those controls' edges (`--card` and
+  `--bg` are nearly the same lightness). Rather than darkening `--border` everywhere —
+  which would've also affected purely decorative uses like the nav divider and progress
+  dots, where text already conveys the same info — added a separate `--control-border`
+  token (light `#8f8c89` / dark `#736f6b`, ~3.2-3.6:1 against both `--bg` and `--card`)
+  applied only to actual interactive/informational boundaries.
+- **Dark mode's active/selected state (`.chip.active`, `.option-btn.picked/.correct`,
+  and the base `button` style) hardcoded white text on `--accent`** — fine in light mode
+  where `--accent` is a dark forest green, but `--accent` flips to a light mint in dark
+  mode, dropping white-on-it to 2.06:1. Caught by `@axe-core/playwright`, not visual
+  review — the light-mint-with-white-text combination still *looked* on-brand and
+  intentional at a glance. Replaced the 4 hardcoded `color: white` instances with a
+  theme-aware `--on-accent` token (white in light mode, `--bg`'s dark value in dark mode).
+
+Also nudged light-mode `--incorrect-fg` from a 4.54:1 pass (too tight a margin given
+rendering variance across displays) to 5.30:1.
+
+Re-ran the full 8-screen-state axe sweep in both color schemes after the fix: zero
+violations, including zero `color-contrast` violations specifically. A complete
+keyboard-only/screen-reader walkthrough (not just automated tooling) is still open.
 
 ## Installable PWA (v0.1.5 addition)
 

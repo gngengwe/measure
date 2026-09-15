@@ -6,9 +6,19 @@
   --accent: #1f6f54;
   --card: #ffffff;
   --border: #e4e2dd;
+  /* Stronger than --border, for boundaries WCAG 1.4.11 treats as load-bearing (inputs,
+     buttons, chips) — --card and --bg are nearly identical in lightness here, so the
+     border is the only way to perceive those controls' edges, unlike --border's other
+     uses (nav divider, progress dots, bar tracks) where text/color redundantly conveys
+     the same info and a subtle line is a deliberate, acceptable design choice. */
+  --control-border: #8f8c89;
   --incorrect-bg: #fbe9e3;
   --incorrect-border: #e0663e;
-  --incorrect-fg: #b8461f;
+  --incorrect-fg: #a83e1a;
+  /* Text color for content sitting on an --accent background. White works in light mode
+     (dark green accent) but fails contrast in dark mode, where --accent flips to a light
+     mint — caught by axe-core, not visual review, since both look "on-brand" at a glance. */
+  --on-accent: #ffffff;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -20,9 +30,11 @@
     --accent: #4cc9a0;
     --card: #202225;
     --border: #33352f;
+    --control-border: #736f6b;
     --incorrect-bg: #3a2420;
     --incorrect-border: #e0663e;
     --incorrect-fg: #ff8f66;
+    --on-accent: #17181a;
   }
 }
 
@@ -89,7 +101,7 @@ input[type="number"] {
   min-width: 0;
   padding: 12px 14px;
   font-size: 1.05rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 10px;
   background: var(--card);
   color: var(--fg);
@@ -99,7 +111,7 @@ select {
   flex: 1;
   padding: 12px 8px;
   font-size: 1.05rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 10px;
   background: var(--card);
   color: var(--fg);
@@ -115,7 +127,7 @@ select {
 .chip {
   padding: 7px 13px;
   font-size: 0.85rem;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 999px;
   background: var(--card);
   color: var(--fg);
@@ -127,7 +139,7 @@ select {
 .chip.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--on-accent);
 }
 
 .result-heading {
@@ -152,7 +164,7 @@ select {
 
 .comparisons li {
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 12px;
   padding: 14px 16px;
   font-size: 1.05rem;
@@ -177,7 +189,7 @@ select {
   padding: 10px 14px;
   margin: 0 0 16px;
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -215,7 +227,7 @@ button {
   border: none;
   border-radius: 10px;
   background: var(--accent);
-  color: white;
+  color: var(--on-accent);
   cursor: pointer;
 }
 
@@ -270,7 +282,7 @@ button { transition: transform 0.1s ease, opacity 0.1s ease; }
 .option-btn {
   background: var(--card);
   color: var(--fg);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   text-align: left;
   border-radius: 12px;
   padding: 14px 16px;
@@ -282,7 +294,7 @@ button { transition: transform 0.1s ease, opacity 0.1s ease; }
 .option-btn.picked {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--on-accent);
   opacity: 1;
 }
 
@@ -303,7 +315,7 @@ button { transition: transform 0.1s ease, opacity 0.1s ease; }
 .option-btn.correct {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--on-accent);
   opacity: 1;
 }
 
@@ -366,7 +378,7 @@ button { transition: transform 0.1s ease, opacity 0.1s ease; }
 .summary-actions button:last-child {
   background: transparent;
   color: var(--muted);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
 }
 
 /* ---------- category icons with emoji fallback ---------- */
