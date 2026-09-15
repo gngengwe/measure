@@ -147,6 +147,27 @@ mode passes that profile's `preferenceWeights()` into `translate()` and shows a
 "Personalized for {name}" note whenever at least one category has enough samples to be
 weighted.
 
+## Installable PWA (v0.1.5 addition)
+
+`PRODUCT.md`/this file said "Platform: mobile-first web/PWA" since v0.1, but nothing
+actually made it installable until now. Added `public/manifest.webmanifest` (name, icons,
+`display: standalone`, theme/background colors) and an icon set generated from the mascot
+artwork (`public/images/icon-192.png`, `icon-512.png`, `icon-maskable-512.png` — the
+maskable variant pads the mascot to ~65% scale on a solid accent background so Android's
+adaptive-icon mask doesn't clip it — and `apple-touch-icon.png`, opaque since iOS renders
+transparent PNG areas as black). Also generated `public/images/og-image.png` (1200x630)
+for a proper link-preview thumbnail, and the `_middleware.ts` function from the previous
+addition now rewrites `og:image`/`twitter:image` to an absolute URL on every request
+(relative image URLs are unreliable with some link-preview crawlers).
+
+**Deliberately no caching service worker.** `public/sw.js` registers a fetch listener that
+does nothing — no `respondWith`, no cache reads/writes — because this project redeploys
+multiple times per session during active testing, and a caching SW is the classic PWA
+footgun that leaves users stuck on a stale build after a push. Its only purpose is
+satisfying Chromium's install-prompt criteria, which checks for an active SW with a fetch
+handler but doesn't require it to do anything. Revisit adding real caching only once the
+deploy cadence slows down.
+
 ## Shareable link previews (v0.1.4 addition)
 
 The share URL (`?d=100&u=ft`) is meaningless as a link-preview card without server-side

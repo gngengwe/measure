@@ -23,20 +23,28 @@ export const onRequest = async (context: any): Promise<any> => {
 
   if (url.pathname !== "/" || context.request.method !== "GET") return response;
 
+  // Relative og:image/twitter:image URLs are unreliable with some link-preview
+  // crawlers, so always rewrite them to absolute -- on every request, not just ones
+  // with d/u params, since the default card needs this too.
+  const absoluteImage = `${url.origin}/images/og-image.png`;
+  const rewriter = new (globalThis as any).HTMLRewriter()
+    .on('meta[property="og:image"]', { element: (el: any) => el.setAttribute("content", absoluteImage) })
+    .on('meta[name="twitter:image"]', { element: (el: any) => el.setAttribute("content", absoluteImage) });
+
   const d = url.searchParams.get("d");
   const u = url.searchParams.get("u");
-  if (!d || !u || !VALID_UNITS.includes(u as Unit)) return response;
+  if (!d || !u || !VALID_UNITS.includes(u as Unit)) return rewriter.transform(response);
 
   const value = Number(d);
-  if (!Number.isFinite(value) || value <= 0) return response;
+  if (!Number.isFinite(value) || value <= 0) return rewriter.transform(response);
 
   const result = translate(value, u as Unit);
-  if (result.comparisons.length === 0) return response;
+  if (result.comparisons.length === 0) return rewriter.transform(response);
 
   const title = `${value} ${u} — NGenWay Measure`;
   const description = result.comparisons.map(formatComparison).join(" · ");
 
-  const rewriter = new (globalThis as any).HTMLRewriter()
+  rewriter
     .on("title", { element: (el: any) => el.setInnerContent(title) })
     .on('meta[name="description"]', { element: (el: any) => el.setAttribute("content", description) })
     .on('meta[property="og:title"]', { element: (el: any) => el.setAttribute("content", title) })

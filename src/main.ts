@@ -570,3 +570,9 @@ function renderLearnSummary(screen: HTMLElement) {
 }
 
 render();
+
+// No-op registration (see public/sw.js for why it does no caching) -- its only job is
+// to satisfy Chromium's "Add to Home Screen" install-prompt criteria.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(() => {});
+}
