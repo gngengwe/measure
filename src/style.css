@@ -6,6 +6,9 @@
   --accent: #1f6f54;
   --card: #ffffff;
   --border: #e4e2dd;
+  --incorrect-bg: #fbe9e3;
+  --incorrect-border: #e0663e;
+  --incorrect-fg: #b8461f;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
@@ -17,6 +20,9 @@
     --accent: #4cc9a0;
     --card: #202225;
     --border: #33352f;
+    --incorrect-bg: #3a2420;
+    --incorrect-border: #e0663e;
+    --incorrect-fg: #ff8f66;
   }
 }
 
@@ -267,6 +273,43 @@ button { transition: transform 0.1s ease, opacity 0.1s ease; }
   color: white;
   opacity: 1;
 }
+
+.learn-clue {
+  text-align: center;
+}
+
+.learn-options {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.learn-options .option-btn {
+  flex: 1 1 calc(50% - 5px);
+  text-align: center;
+}
+
+.option-btn.correct {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+  opacity: 1;
+}
+
+.option-btn.incorrect {
+  background: var(--incorrect-bg);
+  border-color: var(--incorrect-border);
+  color: var(--incorrect-fg);
+  opacity: 1;
+}
+
+.learn-feedback {
+  margin: 14px 0 0;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.learn-feedback.correct { color: var(--accent); }
+.learn-feedback.incorrect { color: var(--incorrect-fg); }
 
 .breakdown {
   list-style: none;

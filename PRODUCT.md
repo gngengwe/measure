@@ -38,6 +38,21 @@ from their originally-deferred v0.2 slot — see MVP_SPEC.md for the mechanics
 (profile storage, weighting formula, round generation). Still no backend, no
 accounts, no cross-device sync: everything lives in that browser's localStorage.
 
+## v0.1.3 addition: Learn mode (Stage 2 "Teacher")
+Added once Translate + Play were testing well. A third mode: enter/pick a name, see a
+single comparison clue (the same top-ranked neutral comparison Translate would show —
+no separately-authored quiz content), guess the real distance from 4 multiple-choice
+options, get immediate right/wrong feedback with the correct answer revealed, 10 rounds
+per session. Lifetime accuracy persists per local profile and is shown on the name
+screen and after each session — the point is to make "am I getting better at this
+without the app" visible, which is the product's stated differentiator. Confetti only
+fires at 70%+ session accuracy (Play mode's always fires — Learn mode's is earned).
+
+Deliberately the *inverse* of Translate (comparison → number, instead of number →
+comparison) rather than a photo-based "how far is it" guess (the original mockup 3 used
+a photo backdrop, which needs camera/AR-adjacent work still out of scope). See
+`MVP_SPEC.md` for the mechanics.
+
 ## v0.1 non-goals
 - Native app
 - AR measurement / camera
@@ -45,8 +60,8 @@ accounts, no cross-device sync: everything lives in that browser's localStorage.
 - Driving interaction
 - Accounts / cloud personalization / backend (local-only personalization is now in
   scope via Play mode, above — this excludes only server-side/cross-device accounts)
-- Guess-the-actual-distance quiz mode (mockup 3's "how far is it, pick a number"
-  mechanic — different from Play mode's "which comparison helps," still deferred)
+- Photo/scene-based distance guessing (mockup 3's original camera-backdrop version —
+  Learn mode above covers the same "guess the distance" goal without it)
 - Any measurement category other than distance
 - Novelty analogy generation (e.g. "38 baguettes")
 

@@ -1,6 +1,7 @@
 import { REFERENCES } from "./data";
 import { toMeters } from "./convert";
 import { rankComparisons } from "./rank";
+import { shuffle } from "./util";
 import type { Comparison, Unit } from "./types";
 
 export interface Round {
@@ -44,15 +45,6 @@ const DISTANCE_POOL: Array<{ value: number; unit: Unit }> = [
   { value: 0.5, unit: "mi" },
   { value: 1, unit: "mi" },
 ];
-
-function shuffle<T>(items: T[]): T[] {
-  const arr = [...items];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
 
 /**
  * Build a session of rounds using neutral (unpersonalized) ranking — the game exists

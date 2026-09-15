@@ -147,5 +147,33 @@ mode passes that profile's `preferenceWeights()` into `translate()` and shows a
 "Personalized for {name}" note whenever at least one category has enough samples to be
 weighted.
 
+## Learn mode (v0.1.3 addition)
+
+**Round generation** (`src/core/learn.ts`): a target distance in feet is drawn from a
+curated pool (`DISTANCE_POOL_FT`, 10-1000ft). The clue is the single top-ranked *neutral*
+comparison for that distance from the same `rankComparisons()`/`formatComparison()`
+pipeline Translate uses — so the quiz never shows content that could contradict what
+Translate would say for the same number. 3 distractor distances are drawn from the same
+pool, preferring ones within roughly 0.3x-3.5x of the target so choices stay plausible
+rather than trivially eliminable; falls back to any other pool value if fewer than 3
+plausible ones exist (this is why 750 was added to the pool alongside 500/1000 — the top
+of the range needs same-order-of-magnitude neighbors too).
+
+**Session:** 10 rounds, no target distance repeats within a session (`shuffle()` over the
+pool, now factored into `src/core/util.ts` and shared with Play mode's `game.ts`).
+
+**Scoring:** per-profile `learn: { played, correct }` on the existing `Profile` type
+(`src/core/profile.ts`). `recordLearnRound()` updates it; `learnAccuracy()` returns
+`correct/played`, or `null` before any rounds are played. Profiles saved before this field
+existed are backfilled with `{ played: 0, correct: 0 }` in `loadProfile()` rather than
+crashing.
+
+**Feedback:** on answer, the picked button turns green (correct) or terracotta
+(incorrect); if incorrect, the actually-correct option also turns green so the right
+answer is visible before auto-advancing (~1.3s, longer than Play mode's ~350ms since
+there's more to read). Session summary shows this session's score plus lifetime accuracy;
+confetti only at 70%+ session accuracy (unlike Play mode, which always confettis — Learn
+mode's is meant to feel earned, not automatic).
+
 ## Explicit non-goals for v0.1
 See `PRODUCT.md`.

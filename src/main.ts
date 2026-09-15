@@ -10,13 +10,17 @@ import {
   listProfileNames,
   allConversions,
   formatConversionValue,
+  buildLearnSession,
+  recordLearnRound,
+  learnAccuracy,
 } from "./core";
-import type { Unit, Round, Profile } from "./core";
+import type { Unit, Round, Profile, LearnRound } from "./core";
 
 const app = document.getElementById("app")!;
 
 const UNITS: Unit[] = ["ft", "yd", "mi", "in", "m", "cm", "km"];
 const ROUND_COUNT = 10;
+const LEARN_ROUND_COUNT = 10;
 
 const QUICK_PICKS: Array<{ value: number; unit: Unit; label: string }> = [
   { value: 10, unit: "ft", label: "10 ft" },
@@ -80,16 +84,34 @@ function launchConfetti(container: HTMLElement) {
   setTimeout(() => burst.remove(), 2200);
 }
 
-type Mode = "translate" | "play-name" | "play-round" | "play-summary";
+type Mode =
+  | "translate"
+  | "play-name"
+  | "play-round"
+  | "play-summary"
+  | "learn-name"
+  | "learn-round"
+  | "learn-summary";
 
 interface AppState {
   mode: Mode;
   profile: Profile | null;
   session: Round[];
   roundIndex: number;
+  learnSession: LearnRound[];
+  learnRoundIndex: number;
+  learnCorrectCount: number;
 }
 
-const state: AppState = { mode: "translate", profile: null, session: [], roundIndex: 0 };
+const state: AppState = {
+  mode: "translate",
+  profile: null,
+  session: [],
+  roundIndex: 0,
+  learnSession: [],
+  learnRoundIndex: 0,
+  learnCorrectCount: 0,
+};
 
 function readFromUrl(): { value: number; unit: Unit } | null {
   const params = new URLSearchParams(window.location.search);
@@ -106,6 +128,7 @@ function renderNav(): string {
     <nav class="mode-nav">
       <button type="button" class="mode-tab ${state.mode === "translate" ? "active" : ""}" data-mode="translate">Translate</button>
       <button type="button" class="mode-tab ${state.mode.startsWith("play") ? "active" : ""}" data-mode="play">Play</button>
+      <button type="button" class="mode-tab ${state.mode.startsWith("learn") ? "active" : ""}" data-mode="learn">Learn</button>
     </nav>
   `;
 }
@@ -122,10 +145,11 @@ function render() {
 
   document.querySelectorAll<HTMLButtonElement>(".mode-tab").forEach((tab) => {
     tab.addEventListener("click", () => {
-      // Always land on the name screen when switching to Play — mid-session state
-      // (an in-progress round of 20) isn't worth resuming across a mode switch,
-      // and the name screen also doubles as "see stats / switch player."
-      state.mode = tab.dataset.mode === "translate" ? "translate" : "play-name";
+      // Always land on the name screen when switching to Play/Learn — mid-session
+      // state (an in-progress round) isn't worth resuming across a mode switch, and
+      // the name screen also doubles as "see stats / switch player."
+      const target = tab.dataset.mode;
+      state.mode = target === "translate" ? "translate" : target === "play" ? "play-name" : "learn-name";
       render();
     });
   });
@@ -135,6 +159,9 @@ function render() {
   else if (state.mode === "play-name") renderPlayName(screen);
   else if (state.mode === "play-round") renderPlayRound(screen);
   else if (state.mode === "play-summary") renderPlaySummary(screen);
+  else if (state.mode === "learn-name") renderLearnName(screen);
+  else if (state.mode === "learn-round") renderLearnRound(screen);
+  else if (state.mode === "learn-summary") renderLearnSummary(screen);
 }
 
 // ---------- Translate screen ----------
@@ -384,6 +411,159 @@ function renderPlaySummary(screen: HTMLElement) {
   });
 
   document.getElementById("done-playing")!.addEventListener("click", () => {
+    state.mode = "translate";
+    render();
+  });
+}
+
+// ---------- Learn: name entry ----------
+
+function renderLearnName(screen: HTMLElement) {
+  const existingNames = listProfileNames();
+  // Show lifetime accuracy for a returning name as soon as they type/pick it, so
+  // "am I getting better" is visible before they even start a new session.
+  const knownProfiles = Object.fromEntries(existingNames.map((n) => [n, loadProfile(n)]));
+
+  screen.innerHTML = `
+    <p class="tagline">Who's learning? You'll see a comparison and guess the real distance —
+    ${LEARN_ROUND_COUNT} rounds, multiple choice.</p>
+    <div class="input-row">
+      <input type="text" id="player-name" placeholder="Your name" maxlength="40" />
+      <button type="button" id="start-learn">Start</button>
+    </div>
+    ${
+      existingNames.length > 0
+        ? `<div class="chips">
+            ${existingNames
+              .map((n) => {
+                const acc = learnAccuracy(knownProfiles[n]);
+                const label = acc === null ? n : `${n} (${Math.round(acc * 100)}%)`;
+                return `<button type="button" class="chip name-chip" data-name="${n}">${label}</button>`;
+              })
+              .join("")}
+          </div>`
+        : ""
+    }
+  `;
+
+  const nameInput = document.getElementById("player-name") as HTMLInputElement;
+  const startBtn = document.getElementById("start-learn") as HTMLButtonElement;
+
+  function startWithName(name: string) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    state.profile = loadProfile(trimmed);
+    state.learnSession = buildLearnSession(LEARN_ROUND_COUNT);
+    state.learnRoundIndex = 0;
+    state.learnCorrectCount = 0;
+    state.mode = "learn-round";
+    render();
+  }
+
+  startBtn.addEventListener("click", () => startWithName(nameInput.value));
+  nameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") startWithName(nameInput.value);
+  });
+  document.querySelectorAll<HTMLButtonElement>(".name-chip").forEach((chip) => {
+    chip.addEventListener("click", () => startWithName(chip.dataset.name!));
+  });
+}
+
+// ---------- Learn: round ----------
+
+function renderLearnRound(screen: HTMLElement) {
+  const round = state.learnSession[state.learnRoundIndex];
+  const profile = state.profile!;
+
+  const dots = state.learnSession
+    .map(
+      (_, i) =>
+        `<span class="progress-dot ${i < state.learnRoundIndex ? "done" : ""} ${i === state.learnRoundIndex ? "current" : ""}"></span>`
+    )
+    .join("");
+
+  screen.innerHTML = `
+    <div class="round-card">
+      <p class="round-progress">${profile.name}'s turn</p>
+      <div class="progress-dots">${dots}</div>
+      <p class="result-heading round-heading learn-clue">${round.clue}</p>
+      <p class="tagline">About how far is that?</p>
+      <div class="round-options learn-options">
+        ${round.options.map((ft, i) => `<button type="button" class="option-btn" data-value="${ft}" data-index="${i}">${ft} ft</button>`).join("")}
+      </div>
+      <p class="learn-feedback" hidden></p>
+    </div>
+  `;
+
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".option-btn"));
+  const feedback = screen.querySelector<HTMLElement>(".learn-feedback")!;
+
+  buttons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (buttons.some((b) => b.disabled)) return; // already answered this round
+      buttons.forEach((b) => (b.disabled = true));
+
+      const guessedFt = Number(btn.dataset.value);
+      const correct = guessedFt === round.targetFt;
+
+      btn.classList.add(correct ? "correct" : "incorrect");
+      if (!correct) {
+        const correctBtn = buttons.find((b) => Number(b.dataset.value) === round.targetFt);
+        correctBtn?.classList.add("correct");
+      }
+
+      feedback.hidden = false;
+      feedback.textContent = correct ? "✓ Correct!" : `✗ Not quite — it was ${round.targetFt} ft`;
+      feedback.className = `learn-feedback ${correct ? "correct" : "incorrect"}`;
+
+      state.profile = recordLearnRound(profile, correct);
+      if (correct) state.learnCorrectCount += 1;
+
+      setTimeout(() => {
+        state.learnRoundIndex += 1;
+        state.mode = state.learnRoundIndex >= state.learnSession.length ? "learn-summary" : "learn-round";
+        render();
+      }, 1300);
+    });
+  });
+}
+
+// ---------- Learn: summary ----------
+
+function renderLearnSummary(screen: HTMLElement) {
+  const profile = state.profile!;
+  const sessionTotal = state.learnSession.length;
+  const sessionPct = sessionTotal > 0 ? Math.round((state.learnCorrectCount / sessionTotal) * 100) : 0;
+  const lifetime = learnAccuracy(profile);
+  const doWell = sessionTotal > 0 && state.learnCorrectCount / sessionTotal >= 0.7;
+
+  screen.innerHTML = `
+    <div class="summary-card">
+      <img class="mascot mascot-celebrate" src="/images/mascot-celebrate.png" alt="" onerror="this.remove()" />
+      <p class="tagline">${profile.name}, you got ${state.learnCorrectCount} of ${sessionTotal} right this round (${sessionPct}%).</p>
+      ${
+        lifetime !== null
+          ? `<p class="result-heading round-heading">Lifetime accuracy: ${Math.round(lifetime * 100)}%</p>
+             <p class="tagline">across ${profile.learn.played} rounds played — the goal is to watch this climb.</p>`
+          : ""
+      }
+      <div class="summary-actions">
+        <button type="button" id="learn-more">Play ${LEARN_ROUND_COUNT} more</button>
+        <button type="button" id="done-learning">Done — try the translator</button>
+      </div>
+    </div>
+  `;
+  if (doWell) launchConfetti(screen);
+
+  document.getElementById("learn-more")!.addEventListener("click", () => {
+    state.learnSession = buildLearnSession(LEARN_ROUND_COUNT);
+    state.learnRoundIndex = 0;
+    state.learnCorrectCount = 0;
+    state.mode = "learn-round";
+    render();
+  });
+
+  document.getElementById("done-learning")!.addEventListener("click", () => {
     state.mode = "translate";
     render();
   });

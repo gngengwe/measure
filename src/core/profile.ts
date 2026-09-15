@@ -10,16 +10,26 @@ interface CategoryStats {
   picked: number;
 }
 
+export interface LearnStats {
+  played: number;
+  correct: number;
+}
+
 export interface Profile {
   name: string;
   roundsPlayed: number;
   stats: Record<Category, CategoryStats>;
+  learn: LearnStats;
 }
 
 function emptyStats(): Record<Category, CategoryStats> {
   const stats = {} as Record<Category, CategoryStats>;
   for (const c of CATEGORIES) stats[c] = { shown: 0, picked: 0 };
   return stats;
+}
+
+function emptyLearnStats(): LearnStats {
+  return { played: 0, correct: 0 };
 }
 
 function readStore(): Record<string, Profile> {
@@ -46,7 +56,11 @@ export function listProfileNames(): string[] {
 
 export function loadProfile(name: string): Profile {
   const store = readStore();
-  return store[name] ?? { name, roundsPlayed: 0, stats: emptyStats() };
+  const existing = store[name];
+  // `learn` was added after profiles were already being saved — backfill it for any
+  // profile stored before this change rather than crashing on the missing field.
+  if (existing) return { ...existing, learn: existing.learn ?? emptyLearnStats() };
+  return { name, roundsPlayed: 0, stats: emptyStats(), learn: emptyLearnStats() };
 }
 
 export function saveProfile(profile: Profile): void {
@@ -86,6 +100,23 @@ export function preferenceWeights(profile: Profile): PreferenceWeights {
     weights[c] = 0.7 + 0.6 * pickRate;
   }
   return weights;
+}
+
+/** Record one Learn-mode round's outcome. */
+export function recordLearnRound(profile: Profile, correct: boolean): Profile {
+  const learn: LearnStats = {
+    played: profile.learn.played + 1,
+    correct: profile.learn.correct + (correct ? 1 : 0),
+  };
+  const updated: Profile = { ...profile, learn };
+  saveProfile(updated);
+  return updated;
+}
+
+/** Lifetime Learn-mode accuracy, or null if they haven't played any rounds yet. */
+export function learnAccuracy(profile: Profile): number | null {
+  if (profile.learn.played === 0) return null;
+  return profile.learn.correct / profile.learn.played;
 }
 
 export function categoryBreakdown(profile: Profile): Array<{ category: Category; pickRate: number; shown: number }> {

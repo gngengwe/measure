@@ -11,6 +11,8 @@ export type { PreferenceWeights } from "./rank";
 export { REFERENCES } from "./data";
 export { buildSession } from "./game";
 export type { Round } from "./game";
+export { buildLearnSession } from "./learn";
+export type { LearnRound } from "./learn";
 export {
   loadProfile,
   saveProfile,
@@ -18,8 +20,10 @@ export {
   preferenceWeights,
   categoryBreakdown,
   listProfileNames,
+  recordLearnRound,
+  learnAccuracy,
 } from "./profile";
-export type { Profile } from "./profile";
+export type { Profile, LearnStats } from "./profile";
 
 /**
  * Public entry point — pure function, no side effects, no I/O. This is the whole
