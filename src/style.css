@@ -125,7 +125,11 @@ select {
 }
 
 .chip {
-  padding: 7px 13px;
+  /* Vertical padding tuned so the tap target lands close to the ~40-44px platform
+     guidance for comfortable thumb-tapping (measured 31px before this change) --
+     these are the most frequently-tapped controls in the app on what's meant to be a
+     mobile-first product, more than WCAG AA's bare 24px minimum warrants on its own. */
+  padding: 11px 14px;
   font-size: 0.85rem;
   border: 1px solid var(--control-border);
   border-radius: 999px;

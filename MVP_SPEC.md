@@ -232,6 +232,24 @@ the round heading straight into the answer options); initial page load is unaffe
 (focus stays at `<body>`, untouched, as before). Full 8-screen axe sweep + both-theme
 contrast check re-run after the fix: zero regressions.
 
+## Mobile viewport check (v0.1.9 addition)
+
+The product has said "mobile-first web/PWA" since v0.1, but every screenshot taken while
+building it was at desktop width (~1280px) — never actually verified at real phone
+widths, despite the CDMX test group presumably using phones. Checked at 375px (iPhone
+SE, the narrowest common device) and 360px (common Android baseline) across every screen
+in all three modes.
+
+**No horizontal overflow anywhere** — genuinely clean, not just luck; the layout was
+already built mobile-first (`max-width: 480px` container, flex-wrap chips, no fixed
+widths). One real finding: quick-pick/name-selection chips measured only 31px tall —
+above WCAG AA's bare 24px minimum but below the ~40-44px platform guidance (Apple
+HIG/Material Design) for comfortable thumb-tapping, and these are the single
+most-frequently-tapped control in the app on a touch-first product. Bumped chip padding
+(7px 13px → 11px 14px), landing at 39px measured height. Re-verified no overflow at
+360/375px after the change and zero axe-core regressions. Learn mode's answer buttons
+were already 155x50 — well above guidance, no change needed there.
+
 ## Installable PWA (v0.1.5 addition)
 
 `PRODUCT.md`/this file said "Platform: mobile-first web/PWA" since v0.1, but nothing
